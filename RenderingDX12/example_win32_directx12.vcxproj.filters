@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <FxCompile Include="Techniques\RetainedBasic\RetainedRendering_PS.hlsl" />
+    <FxCompile Include="Techniques\RetainedBasic\RetainedRendering_VS.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Imgui\imgui.cpp" />
+    <ClCompile Include="Imgui\imgui_demo.cpp" />
+    <ClCompile Include="Imgui\imgui_draw.cpp" />
+    <ClCompile Include="Imgui\imgui_impl_dx12.cpp" />
+    <ClCompile Include="Imgui\imgui_impl_win32.cpp" />
+    <ClCompile Include="Imgui\imgui_widgets.cpp" />
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Imgui\imconfig.h" />
+    <ClInclude Include="Imgui\imgui.h" />
+    <ClInclude Include="Imgui\imgui_impl_dx12.h" />
+    <ClInclude Include="Imgui\imgui_impl_win32.h" />
+    <ClInclude Include="Imgui\imgui_internal.h" />
+    <ClInclude Include="Imgui\imstb_rectpack.h" />
+    <ClInclude Include="Imgui\imstb_textedit.h" />
+    <ClInclude Include="Imgui\imstb_truetype.h" />
+    <ClInclude Include="main.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="Techniques\CommonGI\Definitions.h" />
+    <ClInclude Include="Techniques\CommonGI\Parameters.h" />
+    <ClInclude Include="Techniques\CommonGI\ScatteringTools.h" />
+    <ClInclude Include="Techniques\Common\ConstantBuffers.h" />
+    <ClInclude Include="Techniques\Common\RetainedSceneLoader.h" />
+    <ClInclude Include="Techniques\GUI_Traits.h" />
+    <ClInclude Include="Techniques\Randoms\RandomHLSL.h" />
+    <ClInclude Include="Techniques\RetainedBasic\RetainedBasicRenderer.h" />
+    <ClInclude Include="Techniques\Tutorials\Tutorial10.h" />
+    <ClInclude Include="Techniques\GUI_Traits.h" />
+    <ClInclude Include="Techniques\DeferredShading\GBufferConstruction.h" />
+    <ClInclude Include="Techniques\DeferredShading\DeferredLighting.h" />
+    <ClInclude Include="Techniques\Tutorials\Tutorial11.h" />
+    <ClInclude Include="Techniques\Randoms\RandomHLSL.h" />
+    <ClInclude Include="Techniques\CommonGI\Definitions.h" />
+    <ClInclude Include="Techniques\CommonGI\ScatteringTools.h" />
+    <ClInclude Include="Techniques\Tutorials\Tutorial12.h" />
+    <ClInclude Include="Techniques\CommonGI\Parameters.h" />
+    <ClInclude Include="Techniques\CommonRT\CommonRTScenes.h" />
+    <ClInclude Include="Techniques\CommonRT\CommonShadowMaping.h" />
+    <ClInclude Include="Techniques\CommonRT\CommonDeferred.h" />
+    <ClInclude Include="Techniques\CommonRT\CommonOutput.h" />
+    <ClInclude Include="Techniques\CommonRT\CommonProgressive.h" />
+    <ClInclude Include="Techniques\Randoms\MarsagliaRandoms.h" />
+    <ClInclude Include="Techniques\Randoms\MarsagliasXorWow.h" />
+    <ClInclude Include="Techniques\Randoms\XorShiftAster.h" />
+    <ClInclude Include="Techniques\Common\CS_Constants.h" />
+    <ClInclude Include="Techniques\Common\ScreenShotTechnique.h" />
+    <ClInclude Include="Techniques\Randoms\HybridTausRandoms.h" />
+    <ClInclude Include="Techniques\Randoms\RandomX.h" />
+    <ClInclude Include="Techniques\Randoms\RandomUsed.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Imgui\imgui.cpp" />
+    <ClCompile Include="Imgui\imgui_demo.cpp" />
+    <ClCompile Include="Imgui\imgui_draw.cpp" />
+    <ClCompile Include="Imgui\imgui_impl_dx12.cpp" />
+    <ClCompile Include="Imgui\imgui_impl_win32.cpp" />
+    <ClCompile Include="Imgui\imgui_widgets.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Techniques\Sample\Sample_PS.hlsl" />
+    <FxCompile Include="Techniques\Sample\Sample_VS.hlsl" />
+    <FxCompile Include="Techniques\RetainedBasic\RetainedRendering_VS.hlsl" />
+    <FxCompile Include="Techniques\RetainedBasic\RetainedRendering_PS.hlsl" />
+    <FxCompile Include="Techniques\Tutorials\Shaders\NoTransforms_VS.hlsl" />
+    <FxCompile Include="Techniques\Tutorials\Shaders\SimpleColor_PS.hlsl" />
+    <FxCompile Include="Techniques\Tutorials\Shaders\SimpleTransform_VS.hlsl" />
+    <FxCompile Include="Techniques\Tutorials\Shaders\PassPositionAndCoordinates_VS.hlsl" />
+    <FxCompile Include="Techniques\Tutorials\Shaders\BasicSampling2D_PS.hlsl" />
+    <FxCompile Include="Techniques\Tutorials\Shaders\TransformToViewSpace_VS.hlsl" />
+    <FxCompile Include="Techniques\Tutorials\Shaders\SimplePhongShading_PS.hlsl" />
+    <FxCompile Include="Techniques\Tutorials\Shaders\GrabDepthComplexity_PS.hlsl" />
+    <FxCompile Include="Techniques\Tutorials\Shaders\ShowComplexity_PS.hlsl" />
+    <FxCompile Include="Techniques\Tutorials\Shaders\DX_RTX_Sample_RT.hlsl" />
+    <FxCompile Include="Techniques\Tutorials\Shaders\DX_RTX_Basic_RT.hlsl" />
+    <FxCompile Include="Techniques\DeferredShading\DeferredShading_VS.hlsl" />
+    <FxCompile Include="Techniques\DeferredShading\DeferredShading_PS.hlsl" />
+    <FxCompile Include="Techniques\DeferredShading\DeferredLighting_PS.hlsl" />
+    <FxCompile Include="Techniques\Tutorials\Shaders\DXR_ProceduralGeometrySample_RT.hlsl" />
+    <FxCompile Include="Techniques\Tutorials\Shaders\UpdateAABBs_PS.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Readme.md" />
+    <None Include="..\tools\x64\dxrfallbackcompiler.dll" />
+    <None Include="..\tools\x64\PostbuildCopy.bat" />
+    <None Include="..\tools\x64\PrebuildCheck.bat" />
+    <None Include="packages.config" />
+    <None Include="..\tools\x64\version.txt" />
+  </ItemGroup>
+</Project>

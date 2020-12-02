@@ -12,7 +12,7 @@ public:
 	const char* FileName;
 
 	void Startup() {
-		TextureToSave = _ gCreate DrawableTexture2D<RGBA>(render_target->Width, render_target->Height);
+		TextureToSave = __create DrawableTexture2D<RGBA>(render_target->Width, render_target->Height);
 	}
 	
 	void Frame() {
@@ -23,10 +23,10 @@ public:
 		perform(Save);
 	}
 	void Copy(gObj<GraphicsManager> manager) {
-		manager gCopy All(TextureToSave, render_target);
+		manager _copy All(TextureToSave, render_target);
 	}
 
 	void Save(gObj<GraphicsManager> manager) {
-		manager gLoad ToFile(TextureToSave, FileName);
+		manager _load ToFile(TextureToSave, FileName);
 	}
 };

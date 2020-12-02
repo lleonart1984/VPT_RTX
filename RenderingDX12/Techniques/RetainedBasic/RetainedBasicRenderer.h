@@ -26,10 +26,10 @@ public:
 
 protected:
 	void Setup() {
-		_ gSet VertexShader(ShaderLoader::FromFile(".\\Techniques\\RetainedBasic\\RetainedRendering_VS.cso"));
-		_ gSet PixelShader(ShaderLoader::FromFile(".\\Techniques\\RetainedBasic\\RetainedRendering_PS.cso"));
-		_ gSet InputLayout({});
-		_ gSet DepthTest();
+		__set VertexShader(ShaderLoader::FromFile(".\\Techniques\\RetainedBasic\\RetainedRendering_VS.cso"));
+		__set PixelShader(ShaderLoader::FromFile(".\\Techniques\\RetainedBasic\\RetainedRendering_PS.cso"));
+		__set InputLayout({});
+		__set DepthTest();
 	}
 
 	void Globals()
@@ -73,18 +73,18 @@ protected:
 		{
 			sceneLoader = new RetainedSceneLoader();
 			sceneLoader->SetScene(this->Scene);
-			_ gLoad Subprocess(sceneLoader);
+			__load Subprocess(sceneLoader);
 		}
 
 		// Load and setup pipeline resource
-		_ gLoad Pipeline(pipeline);
+		__load Pipeline(pipeline);
 
 		// Create depth buffer resource
-		gBind(depthBuffer) _ gCreate DepthBuffer(render_target->Width, render_target->Height);
+		depthBuffer = __create DepthBuffer(render_target->Width, render_target->Height);
 
 		// Create globals VS constant buffer
-		gBind(globalsCB) _ gCreate ConstantBuffer<Globals>();
-		gBind(lightingCB) _ gCreate ConstantBuffer<Lighting>();
+		globalsCB = __create ConstantBuffer<Globals>();
+		lightingCB = __create ConstantBuffer<Lighting>();
 
 		pipeline->depthBuffer = depthBuffer;
 		pipeline->globals = globalsCB;
@@ -105,19 +105,19 @@ protected:
 
 		float4x4 view, proj;
 		Camera->GetMatrices(render_target->Width, render_target->Height, view, proj);
-		manager gCopy ValueData(globalsCB, Globals{ proj, view });
-		manager gCopy ValueData(lightingCB, Lighting{
+		manager _copy ValueData(globalsCB, Globals{ proj, view });
+		manager _copy ValueData(lightingCB, Lighting{
 					mul(float4(Light->Position, 1), view).getXYZHomogenized(), 0,
 					Light->Intensity
 				});
 
-		manager gClear RT(render_target, float4(Backcolor, 1));
-		manager gClear Depth(depthBuffer, 1);
+		manager _clear RT(render_target, float4(Backcolor, 1));
+		manager _clear Depth(depthBuffer, 1);
 
-		manager gSet Viewport(render_target->Width, render_target->Height);
-		manager gSet Pipeline(pipeline);
+		manager _set Viewport(render_target->Width, render_target->Height);
+		manager _set Pipeline(pipeline);
 
-		manager gDispatch Triangles(sceneLoader->VertexBuffer->ElementCount);
+		manager _dispatch Triangles(sceneLoader->VertexBuffer->ElementCount);
 	}
 
 	void Frame() {

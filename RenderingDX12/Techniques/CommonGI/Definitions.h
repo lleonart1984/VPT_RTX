@@ -13,6 +13,12 @@ struct Material
 	float4 Roulette; // X - Diffuse ammount, Y - Specular, Z - Mirror scattering, W - Fresnell scattering
 };
 
+struct VolumeMaterial {
+	float3 Extinction;
+	float3 ScatteringAlbedo;
+	float3 G;
+};
+
 // Vertex Data
 struct Vertex
 {

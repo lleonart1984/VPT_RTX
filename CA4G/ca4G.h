@@ -15926,25 +15926,29 @@ namespace CA4G {
 
 #define set_tag(t) getManager()->Tag = t
 
-#define _ this
+#define _create ->creating->
 
-#define gBind(x) (x) =
+#define _load ->loading->
 
-#define gCreate ->creating->
+#define _set ->setting->
 
-#define gLoad ->loading->
+#define _dispatch ->dispatcher->
 
-#define gSet ->setting->
+#define _clear ->clearing->
 
-#define gDispatch ->dispatcher->
+#define _copy ->copying->
 
-#define gOpen(pipeline) (pipeline)->Open();
+#define __create this->creating->
 
-#define gClose(pipeline) (pipeline)->Close();
+#define __load this->loading->
 
-#define gClear ->clearing->
+#define __set this->setting->
 
-#define gCopy ->copying->
+#define __dispatch this->dispatcher->
+
+#define __clear this->clearing->
+
+#define __copy this->copying->
 
 #pragma endregion
 

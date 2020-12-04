@@ -9132,55 +9132,80 @@ namespace CA4G {
 		bool IsSingular() const { return getDeterminant() == 0; }
 	} float3x3;
 
-	typedef struct float3x4
-	{
-		float M00;
-		float M01;
-		float M02;
-		float M03;
-		float M10;
-		float M11;
-		float M12;
-		float M13;
-		float M20;
-		float M21;
-		float M22;
-		float M23;
-		float3x4(float value)
-		{
-			M00 = value;
-			M01 = value;
-			M02 = value;
-			M03 = value;
-			M10 = value;
-			M11 = value;
-			M12 = value;
-			M13 = value;
-			M20 = value;
-			M21 = value;
-			M22 = value;
-			M23 = value;
-		}
-		float3x4() :float3x4(0) {}
-		float3x4(float M00, float M01, float M02, float M03, float M10, float M11, float M12, float M13, float M20, float M21, float M22, float M23)
-		{
-			this->M00 = M00;
-			this->M01 = M01;
-			this->M02 = M02;
-			this->M03 = M03;
-			this->M10 = M10;
-			this->M11 = M11;
-			this->M12 = M12;
-			this->M13 = M13;
-			this->M20 = M20;
-			this->M21 = M21;
-			this->M22 = M22;
-			this->M23 = M23;
-		}
+#pragma region float4x3
 
-		float3x4(const float4x4 &m) :float3x4(m.M00, m.M01, m.M02, m.M03, m.M10, m.M11, m.M12, m.M13, m.M20, m.M21, m.M22, m.M23) {
+	typedef struct float4x3 {
+		float _m00;
+		float _m01;
+		float _m02;
+		float _m10;
+		float _m11;
+		float _m12;
+		float _m20;
+		float _m21;
+		float _m22;
+		float _m30;
+		float _m31;
+		float _m32;
+
+		float4x3() :float4x3(0) {}
+		
+		float4x3(float _m00, float _m01, float _m02, float _m10, float _m11, float _m12, float _m20, float _m21, float _m22, float _m30, float _m31, float _m32) {
+			this->_m00 = _m00;
+			this->_m01 = _m01;
+			this->_m02 = _m02;
+			this->_m10 = _m10;
+			this->_m11 = _m11;
+			this->_m12 = _m12;
+			this->_m20 = _m20;
+			this->_m21 = _m21;
+			this->_m22 = _m22;
+			this->_m30 = _m30;
+			this->_m31 = _m31;
+			this->_m32 = _m32;
 		}
+		float4x3(float v) :float4x3(v, v, v, v, v, v, v, v, v, v, v, v) {}
+	} float4x3;
+
+#pragma endregion
+
+#pragma region float3x4
+
+	typedef struct float3x4 {
+		float _m00;
+		float _m01;
+		float _m02;
+		float _m03;
+		float _m10;
+		float _m11;
+		float _m12;
+		float _m13;
+		float _m20;
+		float _m21;
+		float _m22;
+		float _m23;
+
+		float3x4() :float3x4(0) {}
+
+		float3x4(float _m00, float _m01, float _m02, float _m03, float _m10, float _m11, float _m12, float _m13, float _m20, float _m21, float _m22, float _m23) {
+			this->_m00 = _m00;
+			this->_m01 = _m01;
+			this->_m02 = _m02;
+			this->_m03 = _m03;
+			this->_m10 = _m10;
+			this->_m11 = _m11;
+			this->_m12 = _m12;
+			this->_m13 = _m13;
+			this->_m20 = _m20;
+			this->_m21 = _m21;
+			this->_m22 = _m22;
+			this->_m23 = _m23;
+		}
+		float3x4(float v) :float3x4(v, v, v, v, v, v, v, v, v, v, v, v) {}
 	} float3x4;
+
+#pragma endregion
+
 
 	static float4 operator + (const float4 &v1, const float4 & v2)
 	{
@@ -9410,6 +9435,14 @@ namespace CA4G {
 		return float4(v.x * (m.M00) + (v.y * (m.M10)) + (v.z * (m.M20)) + (v.w * (m.M30)), v.x * (m.M01) + (v.y * (m.M11)) + (v.z * (m.M21)) + (v.w * (m.M31)), v.x * (m.M02) + (v.y * (m.M12)) + (v.z * (m.M22)) + (v.w * (m.M32)), v.x * (m.M03) + (v.y * (m.M13)) + (v.z * (m.M23)) + (v.w * (m.M33)));
 	}
 
+	static float3 mul(const float4& a, const float4x3& b) {
+		return float3(
+			a.x * b._m00 + a.y * b._m10 + a.z * b._m20 + a.w * b._m30,
+			a.x * b._m01 + a.y * b._m11 + a.z * b._m21 + a.w * b._m31,
+			a.x * b._m02 + a.y * b._m12 + a.z * b._m22 + a.w * b._m32);
+	}
+
+
 	static float3 minf(float3 x, float3 y) {
 		return float3(min(x.x, y.x), min(x.y, y.y), min(x.z, y.z));
 	}
@@ -9426,6 +9459,11 @@ namespace CA4G {
 	{
 		return float3x3(m.M00, m.M10, m.M20, m.M01, m.M11, m.M21, m.M02, m.M12, m.M22);
 	}
+
+	static float3x4 transpose(const float4x3 &a) { return float3x4(a._m00, a._m10, a._m20, a._m30, a._m01, a._m11, a._m21, a._m31, a._m02, a._m12, a._m22, a._m32); }
+
+	static float4x3 transpose(const float3x4 &a) { return float4x3(a._m00, a._m10, a._m20, a._m01, a._m11, a._m21, a._m02, a._m12, a._m22, a._m03, a._m13, a._m23); }
+
 	static float4x4 transpose(const float4x4 &m)
 	{
 		return float4x4(m.M00, m.M10, m.M20, m.M30, m.M01, m.M11, m.M21, m.M31, m.M02, m.M12, m.M22, m.M32, m.M03, m.M13, m.M23, m.M33);
@@ -12392,6 +12430,9 @@ namespace CA4G {
 			void IndexBuffer(gObj<Buffer> indices) {
 				manager->boundIndices = indices;
 			}
+			void TransformBuffer(gObj<Buffer> transforms) {
+				manager->boundTransforms = transforms;
+			}
 		} *const setting;
 	};
 
@@ -12522,8 +12563,23 @@ namespace CA4G {
 				dst[2][3] = transform.M32;
 			}
 
+			void FillMat4x3(float(&dst)[3][4], float3x4 transform) {
+				dst[0][0] = transform._m00;
+				dst[0][1] = transform._m01;
+				dst[0][2] = transform._m02;
+				dst[0][3] = transform._m03;
+				dst[1][0] = transform._m10;
+				dst[1][1] = transform._m11;
+				dst[1][2] = transform._m12;
+				dst[1][3] = transform._m13;
+				dst[2][0] = transform._m20;
+				dst[2][1] = transform._m21;
+				dst[2][2] = transform._m22;
+				dst[2][3] = transform._m23;
+			}
+
 		public:
-			void Instance(gObj<GeometriesOnGPU> geometries, UINT mask = 0xFF, int instanceContribution = 0, UINT instanceID = INTSAFE_UINT_MAX, float4x4 transform = float4x4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1));
+			void Instance(gObj<GeometriesOnGPU> geometries, UINT mask = 0xFF, int instanceContribution = 0, UINT instanceID = INTSAFE_UINT_MAX, float3x4 transform = float3x4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0));
 		} *const loading;
 
 		class Creating {
@@ -14785,11 +14841,17 @@ namespace CA4G {
 		}
 	};
 
+	struct SCENE_VOLMATERIAL {
+		float3 Extinction;
+		float3 ScatteringAlbedo;
+		float3 G;
+	};
+
 	struct SCENE_OBJECT {
 		int startVertex;
 		int vertexesCount;
 		SCENE_MATERIAL* Material;
-		float4x4* Transform;
+		float3x4* Transform;
 	};
 
 }
@@ -14997,6 +15059,7 @@ namespace CA4G {
 }
 
 namespace CA4G {
+	
 	class BaseLoader {
 
 	public:
@@ -15005,17 +15068,22 @@ namespace CA4G {
 		int VerticesDataLength;
 
 		int* MaterialIndices = nullptr;
-		float4x4* TransformsData = nullptr;
+		float3x4* TransformsData = nullptr;
 		int ObjectsLength;
-		SCENE_OBJECT* Objects = nullptr;
+		int2* Objects = nullptr;
 
 		list<gObj<TextureData>> Textures = { };
 		list<string> textureNames = { };
 		list<SCENE_MATERIAL> MaterialsData = { };
+		list<SCENE_VOLMATERIAL> VolMaterialsData = { };
 		list<string> materialNames = { };
 
 		float3 Minim;
 		float3 Maxim;
+
+		bool Normalize;
+		float4x4 ApplyTransform;
+		SceneBuilder* Builder;
 
 		virtual void Load(const char *fileName) = 0;
 
@@ -15063,6 +15131,8 @@ namespace CA4G {
 		void addMaterial(string name, SCENE_MATERIAL material) {
 			materialNames.add(name);
 			MaterialsData.add(material);
+
+			VolMaterialsData.add(SCENE_VOLMATERIAL());
 		}
 
 		int resolveTexture(string subdir, string fileName) {
@@ -15092,9 +15162,6 @@ namespace CA4G {
 			return 0;
 		}
 	};
-}
-
-namespace CA4G {
 
 	class ObjLoader : public BaseLoader {
 	public:
@@ -15466,9 +15533,6 @@ namespace CA4G {
 
 			FILE* stream;
 
-			Minim = float3(100000, 100000, 100000);
-			Maxim = float3(-100000, -100000, -100000);
-
 			errno_t err;
 			if (err = fopen_s(&stream, filePath, "r"))
 			{
@@ -15566,12 +15630,18 @@ namespace CA4G {
 			float scaleZ = Maxim.z - Minim.z;
 			float scale = max(0.000001f, max(scaleX, max(scaleY, scaleZ)));
 
+			if (!Normalize)
+				scale = 1;
+
 			Minim = Minim / scale;
 			Maxim = Maxim / scale;
 
 			for (int i = 0; i < positionIndices.size(); i++)
 			{
-				VerticesData[i].Position = positions[positionIndices[i] - 1] / scale;
+				if (Normalize)
+					VerticesData[i].Position = (positions[positionIndices[i] - 1] - Minim - (Maxim - Minim) * 0.5) / scale;
+				else
+					VerticesData[i].Position = positions[positionIndices[i] - 1];
 			}
 
 			for (int i = 0; i < positionIndices.size(); i++)
@@ -15611,25 +15681,24 @@ namespace CA4G {
 			ObjectsLength = groups.size() - 1;
 
 			MaterialIndices = new int[ObjectsLength];
-			TransformsData = new float4x4[ObjectsLength];
-			Objects = new SCENE_OBJECT[ObjectsLength];
+			TransformsData = new float3x4[ObjectsLength];
+			Objects = new int2[ObjectsLength];
 
 			for (int i = 0; i < ObjectsLength; i++)
 			{
 				int startIndex = groups[i];
 				int count = groups[i + 1] - groups[i];
 
+				Objects[i] = int2(startIndex, startIndex + count);
+
 				for (int j = 0; j < count; j++)
 					ObjectsId[startIndex + j] = i;
 
 				MaterialIndices[i] = getMaterialIndex(usedMaterials[i]);
-				TransformsData[i] = float4x4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
-				Objects[i] = {
-					startIndex,
-					count,
-					&MaterialsData[MaterialIndices[i]],
-					&TransformsData[i]
-				};
+				TransformsData[i] = float3x4(
+					this->ApplyTransform.M00, this->ApplyTransform.M10, this->ApplyTransform.M20, this->ApplyTransform.M30,
+					this->ApplyTransform.M01, this->ApplyTransform.M11, this->ApplyTransform.M21, this->ApplyTransform.M31,
+					this->ApplyTransform.M02, this->ApplyTransform.M12, this->ApplyTransform.M22, this->ApplyTransform.M32);
 			}
 
 #ifdef SHUFFLE
@@ -15652,6 +15721,147 @@ namespace CA4G {
 #endif
 		}
 	};
+
+	class Scene {
+
+	private:
+		list<SCENE_VERTEX> VertexData = {};
+		list<int> ObjectsId = {};
+		list<int> MaterialIndices = {};
+		list<float3x4> Transforms = {};
+		list<SCENE_MATERIAL> Materials = {};
+		list<SCENE_VOLMATERIAL> VolMaterials = {};
+		list<int2> Objects = {};
+		list<gObj<TextureData>> Textures = { };
+
+		void appendModels(
+			SCENE_VERTEX* vertices, int vertexCount, int2* objectRanges,
+			float3x4* transforms,
+			int* materialIndices, int objectCount,
+			SCENE_MATERIAL* materials,
+			SCENE_VOLMATERIAL* volMaterials, int materialsCount,
+			gObj<TextureData>* textures, int textureCount
+		) {
+			int vertexOffset = VertexData.size();
+			int objectsIdOffset = ObjectsId.size();
+			int materialsOffset = Materials.size();
+			int textureOffset = Textures.size();
+			for (int v = 0; v < vertexCount; v++)
+				VertexData.add(vertices[v]);
+			for (int i = 0; i < objectCount; i++) {
+				for (int j = objectRanges[i].x; j < objectRanges[i].y; j++)
+					ObjectsId.add(objectsIdOffset + i);
+				MaterialIndices.add(materialsOffset + materialIndices[i]);
+				Transforms.add(transforms[i]);
+				Objects.add(int2(vertexOffset + objectRanges[i].x, vertexOffset + objectRanges[i].y));
+			}
+			for (int i = 0; i < materialsCount; i++)
+			{
+				auto material = materials[i]; // copy the material to update the textures indices
+				material.Bump_Map = material.Bump_Map == -1 ? -1 : material.Bump_Map + textureOffset;
+				material.Diffuse_Map = material.Diffuse_Map == -1 ? -1 : material.Diffuse_Map + textureOffset;
+				material.Specular_Map = material.Specular_Map == -1 ? -1 : material.Specular_Map + textureOffset;
+				material.Mask_Map = material.Mask_Map == -1 ? -1 : material.Mask_Map + textureOffset;
+
+				Materials.add(material);
+				VolMaterials.add(volMaterials[i]);
+			}
+			for (int i = 0; i < textureCount; i++)
+				Textures.add(textures[i]);
+		}
+
+	public:
+
+		void loadModelsFrom(const char* objFilePath, bool normalize = true, float4x4 applyTransform = float4x4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)) {
+
+			BaseLoader* loader = nullptr;
+
+			int len = strlen(objFilePath);
+
+			// It is obj model
+			if (strcmp(objFilePath + len - 4, ".obj") == 0)
+				loader = new ObjLoader();
+
+			if (loader != nullptr)
+			{
+				loader->ApplyTransform = applyTransform;
+				loader->Normalize = normalize;
+				loader->Load(objFilePath);
+
+				this->appendModels(
+					loader->VerticesData, loader->VerticesDataLength,
+					loader->Objects, loader->TransformsData, loader->MaterialIndices, loader->ObjectsLength,
+					&loader->MaterialsData.first(), &loader->VolMaterialsData.first(), loader->MaterialsData.size(),
+					&loader->Textures.first(), loader->Textures.size()
+				);
+			}
+		}
+
+		void computeSceneAABB(float3& minim, float3& maxim) {
+			minim = float3(100000, 100000, 100000);
+			maxim = float3(-100000, -100000, -100000);
+			for (int v = 0; v < VertexData.size(); v++)
+			{
+				float3 p = mul(float4(VertexData[v].Position, 1), transpose(Transforms[ObjectsId[v]]));
+				minim = minf(minim, p);
+				maxim = maxf(maxim, p);
+			}
+		}
+
+		SCENE_VERTEX* getVertexBuffer() {
+			return &VertexData.first();
+		}
+		int getVertexBufferSize() {
+			return VertexData.size();
+		}
+
+		int* getObjectsIds() {
+			return &ObjectsId.first();
+		}
+
+		float3x4* getTransforms() {
+			return &Transforms.first();
+		}
+
+		int* getMaterialIndicesBuffer() {
+			return &MaterialIndices.first();
+		}
+
+		int getMaterialCount() {
+			return Materials.size();
+		}
+
+		SCENE_MATERIAL* getMaterialBuffer() {
+			return &Materials.first();
+		}
+
+		SCENE_VOLMATERIAL* getVolumeMaterialBuffer() {
+			return &VolMaterials.first();
+		}
+
+		int getObjectCount() {
+			return MaterialIndices.size();
+		}
+
+		gObj<TextureData> getTexture(int index) {
+			return this->Textures[index];
+		}
+
+		int getTextureCount() {
+			return this->Textures.size();
+		}
+
+		SCENE_OBJECT getObject(int i) {
+			SCENE_OBJECT obj = {
+					Objects[i].x,
+					Objects[i].y - Objects[i].x,
+					&Materials[MaterialIndices[i]],
+					&Transforms[i]
+			};
+			return obj;
+		}
+	};
+
 }
 
 using namespace std;
@@ -15762,61 +15972,6 @@ namespace CA4G {
 	};
 
 #pragma endregion
-
-	class Scene {
-
-	public:
-
-		inline SCENE_VERTEX* Vertices() {
-			return loader->VerticesData;
-		}
-		inline int VerticesCount() {
-			return loader->VerticesDataLength;
-		}
-		inline int* ObjectIds() {
-			return loader->ObjectsId;
-		}
-		inline list<SCENE_MATERIAL>& Materials() {
-			return loader->MaterialsData;
-		}
-		inline int MaterialsCount() {
-			return loader->MaterialsData.size();
-		}
-		inline int ObjectsCount() {
-			return loader->ObjectsLength;
-		}
-		inline int* MaterialIndices() {
-			return loader->MaterialIndices;
-		}
-		inline SCENE_OBJECT* Objects() {
-			return loader->Objects;
-		}
-		inline float4x4* Transforms() {
-			return loader->TransformsData;
-		}
-		inline list<gObj<TextureData>>& Textures() {
-			return loader->Textures;
-		}
-		inline float3 getMinimum() {
-			return loader->Minim;
-		}
-		inline float3 getMaximum() {
-			return loader->Maxim;
-		}
-		Scene(const char* objFilePath) {
-
-			int len = strlen(objFilePath);
-
-			// It is obj model
-			if (strcmp(objFilePath + len - 4, ".obj") == 0)
-				loader = new ObjLoader();
-
-			if (loader != nullptr)
-				loader->Load(objFilePath);
-		}
-	private:
-		BaseLoader* loader = nullptr;
-	};
 
 	class Volume {
 	public:

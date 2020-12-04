@@ -182,7 +182,7 @@ namespace CA4G {
 		}
 	}
 
-	void InstanceCollection::Loading::Instance(gObj<GeometriesOnGPU> geometries, UINT mask, int instanceContribution, UINT instanceID, float4x4 transform)
+	void InstanceCollection::Loading::Instance(gObj<GeometriesOnGPU> geometries, UINT mask, int instanceContribution, UINT instanceID, float3x4 transform)
 	{
 		manager->usedGeometries->add(geometries);
 

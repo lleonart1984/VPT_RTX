@@ -90,6 +90,34 @@ void GuiFor(gObj<IHasVolume> t) {
 	}
 }
 
+int selectedMaterial = 0;
+
+void GuiFor(gObj<IHasScene> t) {
+	
+	ImGui::DragInt("Material Index", &selectedMaterial, 1, 0, t->Scene->getMaterialCount());
+
+	SCENE_VOLMATERIAL &vol = t->Scene->getVolumeMaterialBuffer()[selectedMaterial];
+
+	float3 extinction = vol.Extinction;
+	float size = max(extinction.x, max(extinction.y, extinction.z));
+	extinction = extinction * 1.0 / max(0.0000001, size);
+	float3 absorption = 1 - vol.ScatteringAlbedo;
+
+	if (
+		ImGui::SliderFloat("Size", (float*)&size, 0.01, 1000, "%.3f", 2) |
+		ImGui::SliderFloat3("Extinction", (float*)&extinction, 0.0, 1.0) |
+		ImGui::SliderFloat3("Absorption", (float*)&absorption, 0.0, 1.0, "%.5f", 4) |
+		ImGui::SliderFloat3("G", (float*)&vol.G, -0.99, 0.99)
+		) {
+		t->Scene->getVolumeMaterialBuffer()[selectedMaterial].Extinction = extinction * size;
+		t->Scene->getVolumeMaterialBuffer()[selectedMaterial].ScatteringAlbedo = 1 - absorption;
+		t->IsVolMaterialDirty = true;
+		auto asLight = t.Dynamic_Cast<IHasLight>();
+		if (asLight)
+			asLight->LightSourceIsDirty = true;
+	}
+}
+
 void GuiFor(gObj<IHasHomogeneousVolume> t) {
 	if (
 		ImGui::SliderFloat("Density", &t->densityScale, 0.001, 20) |
@@ -143,6 +171,7 @@ LPSTR desktop_directory()
 
 void MixGlassMaterial(SCENE_MATERIAL* material, float alpha, float eta = 1.6) {
 	material->RefractionIndex = eta;
+	material->Specular = CA4G::lerp(material->Specular, float3(1, 1, 1), alpha);
 	material->Roulette = CA4G::lerp(material->Roulette, float4(0, 0, 0, 1), alpha);
 }
 
@@ -151,6 +180,7 @@ void MixEmissiveMaterial(SCENE_MATERIAL* material, float3 emissive) {
 }
 
 void MixMirrorMaterial(SCENE_MATERIAL* material, float alpha) {
+	material->Specular = CA4G::lerp(material->Specular, float3(1, 1, 1), alpha);
 	material->Roulette = CA4G::lerp(material->Roulette, float4(0, 0, 1, 0), alpha);
 }
 
@@ -202,9 +232,9 @@ int main(int, char**)
     WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, _T("CA4G_Samples_Window"), NULL };
     RegisterClassEx(&wc);
 	
-	//int windowHeight = 1440;
+	int windowWidth= 1440;
 	//int windowWidth = 1080;
-	int windowWidth = 600 * 7/5;
+	//int windowWidth = 600 * 7/5;
 	//int windowWidth = 600 * 7/5;
 
 
@@ -214,9 +244,9 @@ int main(int, char**)
 	//int windowWidth = 1024;
 	//int windowWidth = 600 * 7 / 5;
 	//int windowHeight = 300;
-	int windowHeight = 800 * 7 / 5;
+	//int windowHeight = 800 * 7 / 5;
 	//int windowHeight = 768;
-	//int windowHeight = 1080;
+	int windowHeight = 1080;
 
 	//int windowHeight = 800*7/5; // Lucys
 	HWND hWnd = CreateWindow(_T("CA4G_Samples_Window"), _T("CA4G Samples"), WS_OVERLAPPEDWINDOW, 100, 100, windowWidth+1024-1008, windowHeight+768-729, NULL, NULL, wc.hInstance, NULL);
@@ -268,138 +298,44 @@ int main(int, char**)
 
 	if (asSceneRenderer)
 	{
-		char * filePath;
+		scene = new Scene();
+		
+		char* filePath = desktop_directory();
+		strcat(filePath, "\\Models\\newLucy.obj");
+		scene->loadModelsFrom(filePath, true, Translate(0.45,0.44,0));
 
-		switch (USE_SCENE) {
-		case BUNNY_OBJ:
-			filePath = desktop_directory();
-			strcat(filePath, "\\Models\\bunnyScene.obj");
-			//strcat(filePath, "\\Models\\CornellWithSphere\\sphereBoxScene.obj");
-			//strcat(filePath, "\\Models\\CornellBox\\BoxBox.obj");
-			scene = new Scene(filePath);
-			camera->Position = float3(0.1f, 0.2f, 1.8f);
-			camera->Target = float3(0, 0, 0);
-			lightSource->Position = float3(0.0, 0.4, 0.1);
-			lightSource->Intensity = float3(400, 400, 400);
-			//MixMirrorMaterial(&scene->Materials()[5], 1);
-			MixGlassMaterial(&scene->Materials()[5], 1);
-			//MixEmissiveMaterial(&scene->Materials()[5], float3(10, 10, 0));
-			break;
-		case CORNELL_OBJ:
-			filePath = desktop_directory();
-			strcat(filePath, "\\Models\\CornellWithSphere\\sphereBoxScene.obj");
-			//strcat(filePath, "\\Models\\CornellBox\\BoxBox.obj");
-			scene = new Scene(filePath);
-			camera->Position = float3(0, 0, 1.8f);
-			camera->Target = float3(0, 0, 0);
-			lightSource->Position = float3(0, 0.4, 0);
-			lightSource->Intensity = float3(240, 240, 240);
-			MixGlassMaterial(&scene->Materials()[5], 1);
-			break;
-		case RING_OBJ:
-			filePath = desktop_directory();
-			//strcat(filePath, "\\Models\\Jade_buddha.obj");
-			strcat(filePath, "\\Models\\weddingRing\\ring.obj");
-			scene = new Scene(filePath);
-			camera->Position = float3(.2f, .2f, 0.25f);
-			camera->Target = float3(0, 0.0f, 0);
-			lightSource->Position = float3(1, 0.4, 0.2);
-			lightSource->Direction = normalize(float3(1, 1, 1));
-			lightSource->Intensity = float3(4, 4, 4);
-			//MixMirrorMaterial(&scene->Materials()[0], 1);
-			MixGlassMaterial(&scene->Materials()[0], 1, 2.6);
-			//MixEmissiveMaterial(&scene->Materials()[0], float3(1, 1, 0));
-			break;
-		case BUDDHA_OBJ:
-			filePath = desktop_directory();
-			//strcat(filePath, "\\Models\\pitagoras\\model2.obj");
-			//strcat(filePath, "\\Models\\dragon.obj");
-			//strcat(filePath, "\\Models\\Jade_buddha.obj");
-			strcat(filePath, "\\Models\\lucy2.obj");
-			//strcat(filePath, "\\Models\\Bunny.obj");
-			//strcat(filePath, "\\Models\\afrodita\\model.obj");
-			//strcat(filePath, "\\Models\\cupid\\cupid.obj");
-			//strcat(filePath, "\\Models\\david\\david.obj");
-			//strcat(filePath, "\\Models\\weddingRing\\ring.obj");
-			//strcat(filePath, "\\Models\\csg\\csg.obj");
-			
-			scene = new Scene(filePath);
+		filePath = desktop_directory();
+		strcat(filePath, "\\Models\\newDragon.obj");
+		scene->loadModelsFrom(filePath, true, Translate(-0.25, 0.14, 0));
 
-			//// Lucy's settings
-			camera->Position = float3(.43f, .133f, -1.3f);
-			camera->Target = float3(.43f, 0.133f, 0);
+		filePath = desktop_directory();
+		strcat(filePath, "\\Models\\plate.obj");
+		scene->loadModelsFrom(filePath, true, mul(Scale(25, 1, 25), Translate(0, 0, 0)));
 
-			//// Budha's settings
-			//camera->Position = float3(-0.0, 0.46, .16);
-			//camera->Target = float3(-0.0,0.46,0);
+		MixGlassMaterial(&scene->getMaterialBuffer()[0], 1, 1.5);
+		scene->getVolumeMaterialBuffer()[0] = SCENE_VOLMATERIAL{
+				float3(500, 500, 500), // sigma
+				float3(0.999, 0.99995, 0.999),
+				float3(0.9, 0.9, 0.9)
+		};
 
-			//// CSG settings
-			//camera->Position = float3(-0.0, 1.8, 2.5);
-			//camera->Target = float3(-0.0, 0.5, 0);
+		MixGlassMaterial(&scene->getMaterialBuffer()[1], 1, 1.5);
+		scene->getVolumeMaterialBuffer()[1] = SCENE_VOLMATERIAL{
+				float3(500, 500, 500), // sigma
+				float3(0.999, 0.99995, 0.999),
+				float3(0.9, 0.9, 0.9)
+		};
 
-			//// Bunny's settings
-			//camera->Position = float3(-0.1f, .46f, 1.9f);
-			//camera->Target = float3(-0.1f, 0.46f, 0);
+		//MixMirrorMaterial(&scene->getMaterialBuffer()[2], 0.2);
 
+		camera->Position = float3(0, 0.5, 1.7);
+		camera->Target = float3(0,0.4,0);
 
-			//camera->Up = float3(0, 0, 1);
-			//camera->Position = float3(0.1f, 0.65f, 0.80f);
-			//camera->Position = float3(-.0f, .405f, -1.5f); // Pitagoras
-			//camera->Position = float3(-.20f, .1205f, -1.25f);
-			//camera->Position = float3(-.4f, .60f, 1.8f);
-			
-			//camera->Target = float3(0, 0.405f, 0); // Pitagoras
-			//camera->Target = float3(0.5, 0.1205f, 0);
-			//camera->Target = float3(-0.2f, 0.4, 0.0f);
-			
-			//// Backs lighting
-			lightSource->Position = float3(0.0, 0.2, -4);
-			lightSource->Direction = normalize(float3(0, 1, 1));
-			
-			// From top Pitagoras
-			//lightSource->Direction = normalize(float3(0, 1, 0));
+		//camera->Position = float3(.43f, .133f, -1.3f);
+		//camera->Target = float3(.43f, 0.133f, 0);
 
-			//lightSource->Position = float3(0.1, 0.4, 0.2);
-			//lightSource->Direction = normalize(float3(0, 0.5f, -1));
-			//lightSource->Direction = normalize(float3(1, 1, 1));
-			lightSource->Intensity = float3(10, 10, 10);
-			//MixMirrorMaterial(&scene->Materials()[0], 1);
-			MixGlassMaterial(&scene->Materials()[0], 1, 1.5);
-			//MixGlassMaterial(&scene->Materials()[0], 1, 1.5);
-			//MixGlassMaterial(&scene->Materials()[1], 1, 1.7);
-			//MixEmissiveMaterial(&scene->Materials()[0], float3(1, 1, 0));
-			break;
-		case SPONZA_OBJ:
-			filePath = desktop_directory();
-			strcat(filePath, "\\Models\\sponza\\SponzaMoreMeshes.obj");
-			scene = new Scene(filePath);
-			//MixMirrorMaterial(&scene->Materials()[9], 1); // floor
-			camera->Position = float3(0.3f, 0.05f, -0.028);
-			camera->Target = float3(0, 0.07f, 0);
-			lightSource->Position = float3(0, 0.45, 0);
-			lightSource->Intensity = float3(450, 450, 450);
-			break;
-		case SIBENIK_OBJ:
-			filePath = desktop_directory();
-			strcat(filePath, "\\Models\\sibenik\\sibenik.obj");
-			scene = new Scene(filePath);
-			//MixGlassMaterial(&scene->Materials()[1], 0.9f); // window
-			MixMirrorMaterial(&scene->Materials()[5], 1); // floor
-			camera->Position = float3(-0.4, -0.3, 0.0);
-			camera->Target = float3(0, -0.25, 0);
-			lightSource->Position = float3(-0, -0.05, 0);
-			lightSource->Intensity = float3(250, 250, 250);
-			break;
-		case SANMIGUEL_OBJ:
-			filePath = desktop_directory();
-			strcat(filePath, "\\Models\\san-miguel\\san-miguel.obj");
-			scene = new Scene(filePath);
-			camera->Position = float3(-4, 3, 0);
-			camera->Target = float3(0, 0, 0);
-			lightSource->Position = float3(0, 2, 0);
-			lightSource->Intensity = float3(10, 10, 10);
-			break;
-		}
+		lightSource->Position = float3(0.0, 0.2, -4);
+		lightSource->Direction = normalize(float3(0, 1, 1));
 
 		asSceneRenderer->Scene = scene;
 	}
@@ -548,6 +484,7 @@ int main(int, char**)
 			RenderGUI<IHasTriangleNumberParameter>(technique);
 			RenderGUI<IHasParalellism>(technique);
 			RenderGUI<IHasLight>(technique);
+			RenderGUI<IHasScene>(technique);
 			RenderGUI<IHasRaymarchDebugInfo>(technique);
 			RenderGUI<IHasHomogeneousVolume>(technique);
 			RenderGUI<IHasVolume>(technique);

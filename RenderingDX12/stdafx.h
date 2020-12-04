@@ -9,5 +9,5 @@ using namespace CA4G;
 #include "Techniques/Common/ConstantBuffers.h"
 #include "Techniques/Common/RetainedSceneLoader.h"
 #include "Techniques/RetainedBasic/RetainedBasicRenderer.h"
-
+#include "Techniques/VPT/VPT_Technique.h"
 #include "main.h"

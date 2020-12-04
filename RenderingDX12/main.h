@@ -28,7 +28,8 @@
 
 //gObj<SphereScatteringTestTechnique> technique;
 
-gObj<RetainedBasicRenderer> technique;
+//gObj<RetainedBasicRenderer> technique;
+gObj<VPT_Technique> technique;
 
 //#define TEST_WSAPIT
 //#define TEST_WSMRAPIT

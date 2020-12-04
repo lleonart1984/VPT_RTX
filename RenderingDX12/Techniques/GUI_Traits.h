@@ -37,6 +37,10 @@ private:
 struct IHasScene {
 	gObj<Scene> Scene;
 
+	bool IsTransformsDirty;
+	bool IsMaterialDirty;
+	bool IsVolMaterialDirty;
+
 	virtual void SetScene(gObj<CA4G::Scene> scene) {
 		this->Scene = scene;
 	}

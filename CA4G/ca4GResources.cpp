@@ -321,6 +321,8 @@ namespace CA4G {
 			return manager->__NullBuffer ? manager->__NullBuffer : manager->__NullBuffer = new Buffer(manager);
 		case D3D12_RESOURCE_DIMENSION_TEXTURE2D:
 			return manager->__NullTexture2D ? manager->__NullTexture2D : manager->__NullTexture2D = new Texture2D(manager);
+		case D3D12_RESOURCE_DIMENSION_TEXTURE3D:
+			return manager->__NullTexture3D ? manager->__NullTexture3D : manager->__NullTexture3D = new Texture3D(manager);
 		}
 		throw "not supported yet";
 	}

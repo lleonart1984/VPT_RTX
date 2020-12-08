@@ -184,6 +184,12 @@ void MixMirrorMaterial(SCENE_MATERIAL* material, float alpha) {
 	material->Roulette = CA4G::lerp(material->Roulette, float4(0, 0, 1, 0), alpha);
 }
 
+void MixGlossyMaterial(SCENE_MATERIAL* material, float alpha) {
+	material->Specular = CA4G::lerp(material->Specular, float3(1, 1, 1), alpha);
+	material->SpecularSharpness = material->SpecularSharpness * (1 - alpha) + 100 * alpha;
+	material->Roulette = CA4G::lerp(material->Roulette, float4(0, 1, 0, 0), alpha);
+}
+
 class ImGUIPresenter : public Presenter {
 public:
 	ImGUIPresenter(HWND hWnd, bool fullScreen = false, int buffers = 2, bool useFrameBuffering = false, bool warpDevice = false):Presenter(hWnd, fullScreen, buffers, useFrameBuffering, warpDevice)
@@ -302,15 +308,15 @@ int main(int, char**)
 		
 		char* filePath = desktop_directory();
 		strcat(filePath, "\\Models\\newLucy.obj");
-		scene->loadModelsFrom(filePath, true, Translate(0.45,0.44,0));
+		scene->loadModelsFrom(filePath, true, Translate(0.0,0.44,0));
 
-		filePath = desktop_directory();
+		/*filePath = desktop_directory();
 		strcat(filePath, "\\Models\\newDragon.obj");
 		scene->loadModelsFrom(filePath, true, Translate(-0.25, 0.14, 0));
 
 		filePath = desktop_directory();
 		strcat(filePath, "\\Models\\plate.obj");
-		scene->loadModelsFrom(filePath, true, mul(Scale(25, 1, 25), Translate(0, 0, 0)));
+		scene->loadModelsFrom(filePath, true, mul(Scale(1, 1, 1), Translate(0, 0, 0)));*/
 
 		MixGlassMaterial(&scene->getMaterialBuffer()[0], 1, 1.5);
 		scene->getVolumeMaterialBuffer()[0] = SCENE_VOLMATERIAL{
@@ -319,14 +325,14 @@ int main(int, char**)
 				float3(0.9, 0.9, 0.9)
 		};
 
-		MixGlassMaterial(&scene->getMaterialBuffer()[1], 1, 1.5);
-		scene->getVolumeMaterialBuffer()[1] = SCENE_VOLMATERIAL{
-				float3(500, 500, 500), // sigma
-				float3(0.999, 0.99995, 0.999),
-				float3(0.9, 0.9, 0.9)
-		};
+		//MixGlassMaterial(&scene->getMaterialBuffer()[1], 1, 1.5);
+		//scene->getVolumeMaterialBuffer()[1] = SCENE_VOLMATERIAL{
+		//		float3(500, 500, 500), // sigma
+		//		float3(0.999, 0.99995, 0.999),
+		//		float3(0.9, 0.9, 0.9)
+		//};
 
-		//MixMirrorMaterial(&scene->getMaterialBuffer()[2], 0.2);
+		//MixMirrorMaterial(&scene->getMaterialBuffer()[2], 0.3);
 
 		camera->Position = float3(0, 0.5, 1.7);
 		camera->Target = float3(0,0.4,0);

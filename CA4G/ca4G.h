@@ -13138,6 +13138,28 @@ namespace CA4G {
 		}
 
 		// Binds a shader resource view
+		void SRV(int slot, gObj<Texture3D>& const resource, int space = 0) {
+			D3D12_ROOT_PARAMETER p = { };
+			p.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			p.DescriptorTable.NumDescriptorRanges = 1;
+			D3D12_DESCRIPTOR_RANGE range = { };
+			range.BaseShaderRegister = slot;
+			range.NumDescriptors = 1;
+			range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+			range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+			range.RegisterSpace = space;
+
+			ranges.add(range);
+			p.DescriptorTable.pDescriptorRanges = &ranges.last();
+
+			SlotBinding b{ };
+			b.Root_Parameter = p;
+			b.DescriptorData.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
+			b.DescriptorData.ptrToResourceViewArray = (void*)&resource;
+			__CurrentBindings->csuBindings.add(b);
+		}
+
+		// Binds a shader resource view
 		void SRV_Array(int startSlot, gObj<Texture2D>*& const resources, int &count, int space = 0) {
 			D3D12_ROOT_PARAMETER p = { };
 			p.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
@@ -13440,6 +13462,7 @@ namespace CA4G {
 
 		gObj<Buffer> __NullBuffer = nullptr;
 		gObj<Texture2D> __NullTexture2D = nullptr;
+		gObj<Texture3D> __NullTexture3D = nullptr;
 
 
 		DeviceManager(DX_Device device, int buffers, bool useFrameBuffer, bool isWarpDevice);
@@ -15743,7 +15766,7 @@ namespace CA4G {
 			gObj<TextureData>* textures, int textureCount
 		) {
 			int vertexOffset = VertexData.size();
-			int objectsIdOffset = ObjectsId.size();
+			int objectsIdOffset = MaterialIndices.size();
 			int materialsOffset = Materials.size();
 			int textureOffset = Textures.size();
 			for (int v = 0; v < vertexCount; v++)

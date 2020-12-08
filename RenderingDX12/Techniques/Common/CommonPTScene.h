@@ -12,15 +12,23 @@ RWTexture2D<float3> Accumulation : register(u1, space1);
 #include "CommonComplexity.h"
 
 void AccumulateOutput(uint2 coord, float3 value) {
-	Accumulation[coord] += value;
 
 	if (AccumulationIsComplexity) {
 
-		float3 acc = Accumulation[coord] / (PassCount + 1);
+		float oldValue = Accumulation[coord].x;
+		float currentValue = (value.x * 256 + value.y);
+		//// Maximum complexity among frames
+		//float newValue = max(oldValue, currentValue);
 
-		Output[coord] = GetColor((int)(acc.x * 256 + acc.y));
+		// Average complexity among frames
+		float newValue = (oldValue * PassCount + currentValue)/(PassCount + 1);
+
+		Accumulation[coord] = float3(newValue, 0, 0);
+
+		Output[coord] = GetColor((int)round(newValue));
 	}
 	else {
+		Accumulation[coord] += value;
 		Output[coord] = Accumulation[coord] / (PassCount + 1);
 	}
 }

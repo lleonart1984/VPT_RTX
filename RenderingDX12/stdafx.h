@@ -10,4 +10,5 @@ using namespace CA4G;
 #include "Techniques/Common/RetainedSceneLoader.h"
 #include "Techniques/RetainedBasic/RetainedBasicRenderer.h"
 #include "Techniques/VPT/VPT_Technique.h"
+#include "Techniques/VPT/VST_Technique.h"
 #include "main.h"

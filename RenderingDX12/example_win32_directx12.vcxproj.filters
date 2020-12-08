@@ -4,6 +4,10 @@
     <FxCompile Include="Techniques\RetainedBasic\RetainedRendering_PS.hlsl" />
     <FxCompile Include="Techniques\RetainedBasic\RetainedRendering_VS.hlsl" />
     <FxCompile Include="Techniques\VPT\VPT_RT.hlsl" />
+    <FxCompile Include="Techniques\VPT\VST_RT.hlsl" />
+    <FxCompile Include="Techniques\VPT\GridInitialDistances_CS.hlsl" />
+    <FxCompile Include="Techniques\VPT\GridSpreadDistances_CS.hlsl" />
+    <FxCompile Include="Techniques\VPT\GridVoxelization_CS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Imgui\imgui.cpp" />
@@ -33,21 +37,11 @@
     <ClInclude Include="Techniques\GUI_Traits.h" />
     <ClInclude Include="Techniques\Randoms\RandomHLSL.h" />
     <ClInclude Include="Techniques\RetainedBasic\RetainedBasicRenderer.h" />
-    <ClInclude Include="Techniques\Tutorials\Tutorial10.h" />
     <ClInclude Include="Techniques\GUI_Traits.h" />
-    <ClInclude Include="Techniques\DeferredShading\GBufferConstruction.h" />
-    <ClInclude Include="Techniques\DeferredShading\DeferredLighting.h" />
-    <ClInclude Include="Techniques\Tutorials\Tutorial11.h" />
     <ClInclude Include="Techniques\Randoms\RandomHLSL.h" />
     <ClInclude Include="Techniques\CommonGI\Definitions.h" />
     <ClInclude Include="Techniques\CommonGI\ScatteringTools.h" />
-    <ClInclude Include="Techniques\Tutorials\Tutorial12.h" />
     <ClInclude Include="Techniques\CommonGI\Parameters.h" />
-    <ClInclude Include="Techniques\CommonRT\CommonRTScenes.h" />
-    <ClInclude Include="Techniques\CommonRT\CommonShadowMaping.h" />
-    <ClInclude Include="Techniques\CommonRT\CommonDeferred.h" />
-    <ClInclude Include="Techniques\CommonRT\CommonOutput.h" />
-    <ClInclude Include="Techniques\CommonRT\CommonProgressive.h" />
     <ClInclude Include="Techniques\Randoms\MarsagliaRandoms.h" />
     <ClInclude Include="Techniques\Randoms\MarsagliasXorWow.h" />
     <ClInclude Include="Techniques\Randoms\XorShiftAster.h" />
@@ -62,6 +56,10 @@
     <ClInclude Include="Techniques\VPT\HGPhase.h" />
     <ClInclude Include="Techniques\Common\ScatteringTools.h" />
     <ClInclude Include="Techniques\VPT\VPT_Technique.h" />
+    <ClInclude Include="Techniques\Common\Distances.h" />
+    <ClInclude Include="Techniques\Common\Environment.h" />
+    <ClInclude Include="Techniques\VPT\CVAEScattering.h" />
+    <ClInclude Include="Techniques\VPT\VST_Technique.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -75,26 +73,8 @@
     <ClCompile Include="Imgui\imgui_widgets.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Techniques\Sample\Sample_PS.hlsl" />
-    <FxCompile Include="Techniques\Sample\Sample_VS.hlsl" />
     <FxCompile Include="Techniques\RetainedBasic\RetainedRendering_VS.hlsl" />
     <FxCompile Include="Techniques\RetainedBasic\RetainedRendering_PS.hlsl" />
-    <FxCompile Include="Techniques\Tutorials\Shaders\NoTransforms_VS.hlsl" />
-    <FxCompile Include="Techniques\Tutorials\Shaders\SimpleColor_PS.hlsl" />
-    <FxCompile Include="Techniques\Tutorials\Shaders\SimpleTransform_VS.hlsl" />
-    <FxCompile Include="Techniques\Tutorials\Shaders\PassPositionAndCoordinates_VS.hlsl" />
-    <FxCompile Include="Techniques\Tutorials\Shaders\BasicSampling2D_PS.hlsl" />
-    <FxCompile Include="Techniques\Tutorials\Shaders\TransformToViewSpace_VS.hlsl" />
-    <FxCompile Include="Techniques\Tutorials\Shaders\SimplePhongShading_PS.hlsl" />
-    <FxCompile Include="Techniques\Tutorials\Shaders\GrabDepthComplexity_PS.hlsl" />
-    <FxCompile Include="Techniques\Tutorials\Shaders\ShowComplexity_PS.hlsl" />
-    <FxCompile Include="Techniques\Tutorials\Shaders\DX_RTX_Sample_RT.hlsl" />
-    <FxCompile Include="Techniques\Tutorials\Shaders\DX_RTX_Basic_RT.hlsl" />
-    <FxCompile Include="Techniques\DeferredShading\DeferredShading_VS.hlsl" />
-    <FxCompile Include="Techniques\DeferredShading\DeferredShading_PS.hlsl" />
-    <FxCompile Include="Techniques\DeferredShading\DeferredLighting_PS.hlsl" />
-    <FxCompile Include="Techniques\Tutorials\Shaders\DXR_ProceduralGeometrySample_RT.hlsl" />
-    <FxCompile Include="Techniques\Tutorials\Shaders\UpdateAABBs_PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Readme.md" />

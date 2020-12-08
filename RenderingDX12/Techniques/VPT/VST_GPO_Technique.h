@@ -3,9 +3,9 @@
 #include "../../Techniques/GUI_Traits.h"
 #include "../CommonGI/Parameters.h"
 
-struct VST_Technique : public Technique, public IHasScene, public IHasLight, public IHasCamera, public IHasScatteringEvents, public IHasAccumulative {
+struct VST_GPO_Technique : public Technique, public IHasScene, public IHasLight, public IHasCamera, public IHasScatteringEvents, public IHasAccumulative {
 
-	~VST_Technique() {}
+	~VST_GPO_Technique() {}
 
 #pragma region Grid Construction Compute Shaders
 
@@ -105,7 +105,7 @@ struct VST_Technique : public Technique, public IHasScene, public IHasLight, pub
 
 		class DXR_RT_IL : public DXIL_Library<DXR_PT_Pipeline> {
 			void Setup() {
-				__load DXIL(ShaderLoader::FromFile(".\\Techniques\\VPT\\VST_RT.cso"));
+				__load DXIL(ShaderLoader::FromFile(".\\Techniques\\VPT\\VST_GPO_RT.cso"));
 
 				__load Shader(Context()->PTMainRays, L"PTMainRays");
 				__load Shader(Context()->EnvironmentMap, L"EnvironmentMap");
@@ -135,9 +135,10 @@ struct VST_Technique : public Technique, public IHasScene, public IHasLight, pub
 			gObj<Buffer> LightingCB;
 			int2 Frame;
 			gObj<Buffer> ProjToWorld;
-			gObj<Buffer> GridInfo;
+			gObj<Buffer> GridInfos;
 
-			gObj<Texture3D> Grid;
+			gObj<Texture3D>* Grids;
+			int GridsCount;
 
 			gObj<Texture2D> Output;
 			gObj<Texture2D> Accum;
@@ -153,8 +154,9 @@ struct VST_Technique : public Technique, public IHasScene, public IHasLight, pub
 				UAV(1, Accum, 1);
 
 				ADS(0, Scene, 0);
-				SRV(1, Grid);
-				
+				SRV(1, GridInfos);
+				SRV_Array(2, Grids, GridsCount);
+
 				SRV(0, Vertices, 1);
 				SRV(1, Transforms, 1);
 				SRV(2, Materials, 1);
@@ -168,11 +170,10 @@ struct VST_Technique : public Technique, public IHasScene, public IHasLight, pub
 
 				CBV(0, LightingCB);
 				CBV(1, ProjToWorld);
-				CBV(2, GridInfo);
 			}
 
 			void HitGroup_Locals() {
-				CBV(3, CurrentObjectInfo);
+				CBV(2, CurrentObjectInfo);
 			}
 		};
 		gObj<DXR_RT_Program> _Program;
@@ -192,16 +193,25 @@ struct VST_Technique : public Technique, public IHasScene, public IHasLight, pub
 	gObj<Spreading> spreading;
 	gObj<DXR_PT_Pipeline> dxrPTPipeline;
 
-	gObj<Texture3D> Grid;
-	gObj<Texture3D> GridTmp;
-
-	int gridSize = 512;
-
 	struct GridInfo {
 		int Size;
 		float3 Min;
 		float3 Max;
 	};
+
+	struct PerObjectGridInfo {
+		float Scalling;
+		float3x4 FromWorldToGrid;
+	};
+
+	gObj<Texture3D>* Grids;
+	gObj<Buffer>* GridInfos;
+	GridInfo* gridInfosData;
+	PerObjectGridInfo* perObjectGridInfos;
+	int GridCount;
+	gObj<Texture3D> GridTmp;
+
+	int gridSize = 512;
 
 	void Startup() {
 
@@ -231,6 +241,29 @@ struct VST_Technique : public Technique, public IHasScene, public IHasLight, pub
 		if (sceneLoader != nullptr)
 			sceneLoader->SetScene(scene);
 	}
+	
+	// Col-order copying assumed... working with transposed transform here...
+	// TODO: To change! include row_major modifiers on shaders when necessary.
+	float3x4 FromWorldToGrid(float3x4 model2worldTransform, GridInfo info)
+	{
+		// Assuming only isotropic scalling allowed!
+
+		float4x4 world2modelTransform = float4x4(
+			model2worldTransform._m00, model2worldTransform._m10, model2worldTransform._m20, 0,
+			model2worldTransform._m01, model2worldTransform._m11, model2worldTransform._m21, 0,
+			model2worldTransform._m02, model2worldTransform._m12, model2worldTransform._m22, 0,
+			model2worldTransform._m03, model2worldTransform._m13, model2worldTransform._m23, 1
+		).getInverse();
+
+		float4x4 world2gridTransform = mul(mul(world2modelTransform,
+			Translate(-1 * info.Min)), Scale(info.Size / (info.Max - info.Min)));
+
+		return float3x4(
+			world2gridTransform.M00, world2gridTransform.M10, world2gridTransform.M20, world2gridTransform.M30,
+			world2gridTransform.M01, world2gridTransform.M11, world2gridTransform.M21, world2gridTransform.M31,
+			world2gridTransform.M02, world2gridTransform.M12, world2gridTransform.M22, world2gridTransform.M32
+		);
+	}
 
 	void CreatingAssets(gObj<CopyingManager> manager) {
 
@@ -257,12 +290,40 @@ struct VST_Technique : public Technique, public IHasScene, public IHasLight, pub
 		voxelizer->Malloc = __create RWStructuredBuffer<int>(1);
 		voxelizer->Head = __create DrawableTexture3D<int>(gridSize, gridSize, gridSize);
 
-		Grid = __create DrawableTexture3D<float>(gridSize, gridSize, gridSize);
+		GridCount = Scene->getObjectCount();
+
+		Grids = new gObj<Texture3D>[GridCount];
+		GridInfos = new gObj<Buffer>[GridCount];
+		perObjectGridInfos = new PerObjectGridInfo[GridCount];
+		gridInfosData = new GridInfo[GridCount];
+		for (int i = 0; i < GridCount; i++)
+		{
+			Grids[i] = __create DrawableTexture3D<float>(gridSize, gridSize, gridSize);
+			GridInfos[i] = __create ConstantBuffer<GridInfo>();
+
+			float3 minim, maxim;
+			sceneLoader->Scene->computeObjectAABBInModelSpace(i, minim, maxim);
+
+			float3 dim = maxim - minim;
+			float maxDim = max(dim.x, max(dim.y, dim.z));
+
+			auto gi = GridInfo{
+				gridSize,
+				minim - float3(0.01, 0.01, 0.01),
+				minim + float3(maxDim, maxDim, maxDim) + float3(0.02, 0.02, 0.02)
+			};
+
+			gridInfosData[i] = gi;
+
+			manager _copy ValueData(GridInfos[i], gi);
+
+			perObjectGridInfos[i] = PerObjectGridInfo{
+				(gi.Max.x - gi.Min.x)/gi.Size // scaling from grid back to world
+			};
+		}
+
 		GridTmp = __create DrawableTexture3D<float>(gridSize, gridSize, gridSize);
 
-		voxelizer->GridInfo = __create ConstantBuffer<GridInfo>();
-
-		initializing->GridInfo = voxelizer->GridInfo;
 		initializing->Triangles = voxelizer->Triangles;
 		initializing->NextBuffer = voxelizer->NextBuffer;
 		initializing->Head = voxelizer->Head;
@@ -271,20 +332,16 @@ struct VST_Technique : public Technique, public IHasScene, public IHasLight, pub
 		initializing->Transforms = sceneLoader->TransformBuffer;
 		initializing->OB = sceneLoader->ObjectBuffer;
 
-		dxrPTPipeline->_Program->GridInfo = voxelizer->GridInfo;
-		spreading->GridInfo = voxelizer->GridInfo;
+		dxrPTPipeline->_Program->GridInfos = __create StructuredBuffer<PerObjectGridInfo>(Scene->getObjectCount());
 
-		float3 minim, maxim;
-		sceneLoader->Scene->computeSceneAABB(minim, maxim);
+		UpdatePerObjectGridInfos(manager);
+	}
 
-		float3 dim = maxim - minim;
-		float maxDim = max(dim.x, max(dim.y, dim.z));
+	void UpdatePerObjectGridInfos(gObj<DXRManager> manager) {
+		for (int i = 0; i < GridCount; i++)
+			perObjectGridInfos[i].FromWorldToGrid = FromWorldToGrid(Scene->getTransforms()[i], gridInfosData[i]);
 
-		manager _copy ValueData(voxelizer->GridInfo, GridInfo{
-			gridSize,
-			minim - float3(0.01, 0.01, 0.01),
-			minim + float3(maxDim, maxDim, maxDim) + float3(0.02, 0.02, 0.02)
-			});
+		manager _copy PtrData(dxrPTPipeline->_Program->GridInfos, perObjectGridInfos);
 	}
 
 	gObj<Buffer> VB;
@@ -319,43 +376,54 @@ struct VST_Technique : public Technique, public IHasScene, public IHasLight, pub
 		sceneLoader->IsVolMaterialDirty = this->IsVolMaterialDirty;
 		ExecuteFrame(sceneLoader); // Needed to update transform, materials or volume materials if needed.
 
+		if (this->IsTransformsDirty)
+			perform(UpdatePerObjectGridInfos);
+
 		static bool first = true;
 
-		if (first) { // if dynamic scene this need to be done everyframe
-			perform(BuildGrid);
+		if (first) { // with deformable models this need to be done everyframe
+			perform(BuildGrids);
 			first = false;
 		}
 
 		perform(Pathtracing);
 	}
 
-	void BuildGrid(gObj<DXRManager> manager) {
+	void BuildGrids(gObj<DXRManager> manager) {
 		auto compute = manager.Dynamic_Cast<ComputeManager>();
 
-		voxelizer->Filter = int3(0, Scene->getVertexBufferSize() / 3, 1);
-		compute _clear UAV(voxelizer->Head, uint4(-1));
-		compute _set Pipeline(voxelizer);
-		compute _dispatch Threads((int)ceil(sceneLoader->VertexBuffer->ElementCount / 3.0 / CS_1D_GROUPSIZE));
-
-		initializing->DistanceField = Grid;
-		initializing->Filter = int3(0, Scene->getVertexBufferSize() / 3, 1);
-		compute _set Pipeline(initializing);
-		compute _dispatch Threads(gridSize * gridSize * gridSize / CS_1D_GROUPSIZE);
-
-		for (int level = 0; level < ceil(log(gridSize) / log(2)); level++)
+		for (int i = 0; i < GridCount; i++)
 		{
-			spreading->GridDst = GridTmp;
-			spreading->GridSrc = Grid;
-			compute _set Pipeline(spreading);
+			auto obj = Scene->getObject(i);
+			voxelizer->Filter = int3(obj.startVertex / 3, obj.vertexesCount / 3, 0); // no use transform
+			voxelizer->GridInfo = GridInfos[i];
+			compute _clear UAV(voxelizer->Head, uint4(-1));
+			compute _set Pipeline(voxelizer);
+			compute _dispatch Threads((int)ceil(obj.vertexesCount / 3.0 / CS_1D_GROUPSIZE)); // dispatch only for triangles of the model.
 
-			spreading->LevelInfo = level;
+			initializing->DistanceField = Grids[i];
+			initializing->GridInfo = GridInfos[i];
+			initializing->Filter = int3(obj.startVertex / 3, obj.vertexesCount / 3, 0); // no use transform
+			compute _set Pipeline(initializing);
 			compute _dispatch Threads(gridSize * gridSize * gridSize / CS_1D_GROUPSIZE);
 
-			Grid = spreading->GridDst;
-			GridTmp = spreading->GridSrc;
+			for (int level = 0; level < ceil(log(gridSize) / log(2)); level++)
+			{
+				spreading->GridInfo = GridInfos[i];
+				spreading->GridDst = GridTmp;
+				spreading->GridSrc = Grids[i];
+				compute _set Pipeline(spreading);
+
+				spreading->LevelInfo = level;
+				compute _dispatch Threads(gridSize * gridSize * gridSize / CS_1D_GROUPSIZE);
+
+				Grids[i] = spreading->GridDst;
+				GridTmp = spreading->GridSrc;
+			}
 		}
 
-		dxrPTPipeline->_Program->Grid = Grid;
+		dxrPTPipeline->_Program->Grids = Grids;
+		dxrPTPipeline->_Program->GridsCount = GridCount;
 	}
 
 	float4x4 view, proj;

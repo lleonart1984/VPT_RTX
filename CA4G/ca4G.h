@@ -13182,6 +13182,29 @@ namespace CA4G {
 			__CurrentBindings->csuBindings.add(b);
 		}
 
+		// Binds a shader resource view
+		void SRV_Array(int startSlot, gObj<Texture3D>*& const resources, int& count, int space = 0) {
+			D3D12_ROOT_PARAMETER p = { };
+			p.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			p.DescriptorTable.NumDescriptorRanges = 1;
+			D3D12_DESCRIPTOR_RANGE range = { };
+			range.BaseShaderRegister = startSlot;
+			range.NumDescriptors = -1;// undefined this moment
+			range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+			range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+			range.RegisterSpace = space;
+
+			ranges.add(range);
+			p.DescriptorTable.pDescriptorRanges = &ranges.last();
+
+			SlotBinding b{ };
+			b.Root_Parameter = p;
+			b.DescriptorData.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
+			b.DescriptorData.ptrToResourceViewArray = (void*)&resources;
+			b.DescriptorData.ptrToCount = &count;
+			__CurrentBindings->csuBindings.add(b);
+		}
+
 		// Binds an unordered access view
 		void UAV(int slot, gObj<Buffer> const &resource, int space = 0) {
 			D3D12_ROOT_PARAMETER p = { };
@@ -15826,6 +15849,18 @@ namespace CA4G {
 			for (int v = 0; v < VertexData.size(); v++)
 			{
 				float3 p = mul(float4(VertexData[v].Position, 1), transpose(Transforms[ObjectsId[v]]));
+				minim = minf(minim, p);
+				maxim = maxf(maxim, p);
+			}
+		}
+
+		void computeObjectAABBInModelSpace(int object, float3& minim, float3& maxim) {
+			minim = float3(100000, 100000, 100000);
+			maxim = float3(-100000, -100000, -100000);
+			auto obj = getObject(object);
+			for (int v = obj.startVertex; v < obj.startVertex + obj.vertexesCount; v++)
+			{
+				float3 p = VertexData[v].Position;
 				minim = minf(minim, p);
 				maxim = maxf(maxim, p);
 			}

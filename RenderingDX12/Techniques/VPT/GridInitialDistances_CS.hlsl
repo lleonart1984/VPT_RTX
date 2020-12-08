@@ -24,9 +24,15 @@ cbuffer GridInfo : register(b0) {
 	float3 Max;
 }
 
+cbuffer Filter : register(b1) {
+	int TriangleStart;
+	int TriangleCount;
+	bool UseTransform;
+}
+
 /// Gets the triangle in Grid space (0,0,0)-(Size, Size, Size)
 void GetTriangle(int triangleIndex, inout float3 t[3]) {
-	float4x3 world = Transforms[OB[triangleIndex * 3]];
+	float4x3 world = UseTransform ? Transforms[OB[triangleIndex * 3]] : float4x3(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0);
 
 	t[0] = (mul(float4(vertices[triangleIndex * 3 + 0].P, 1), world) - Min) * Size / (Max - Min);
 	t[2] = (mul(float4(vertices[triangleIndex * 3 + 2].P, 1), world) - Min) * Size / (Max - Min);

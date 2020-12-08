@@ -6,6 +6,23 @@ float3 softplusActivation(float3 x) { return log(1 + exp(x)); }
 
 float4 softplusActivation(float4 x) { return log(1 + exp(x)); }
 
+
+//float1 softplusActivation(float1 x) {
+//	return x > 3 ? x : x > 0 ? x * 0.77 + 0.7 : x > -3 ? x * 0.3 + 0.7 : 0;
+//}
+//
+//float2 softplusActivation(float2 x) {
+//	return x > 3 ? x : x > 0 ? x * 0.77 + 0.7 : x > -3 ? x * 0.3 + 0.7 : 0;
+//}
+//
+//float3 softplusActivation(float3 x) {
+//	return x > 3 ? x : x > 0 ? x * 0.77 + 0.7 : x > -3 ? x * 0.3 + 0.7 : 0;
+//}
+//
+//float4 softplusActivation(float4 x) {
+//	return x > 3 ? x : x > 0 ? x * 0.77 + 0.7 : x > -3 ? x * 0.3 + 0.7 : 0;
+//}
+
 void lenModel(float _input[4], out float _output[2]) {
 	float4 n_0_0 = float4(_input[0], _input[1], _input[2], _input[3]);
 	float4 n_1_0 = softplusActivation(mul(n_0_0, float4x4(0.044771582f, 0.058675043f, -0.35091886f, 0.06135606f, 4.202735f, 3.8641074f, -0.24396732f, 3.6730285f, 0.0019520547f, 0.0025260192f, 0.0004991561f, -0.002115464f, -0.000111117566f, -0.0020317512f, -0.0014900302f, -0.0016085092f)) + float4(-2.3949573f, -5.1299257f, -0.47003108f, -2.8708553f));

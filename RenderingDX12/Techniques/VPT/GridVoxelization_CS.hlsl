@@ -26,6 +26,12 @@ cbuffer GridInfo : register(b0) {
 	float3 Max;
 }
 
+cbuffer Filter : register(b1) {
+	int TriangleStart;
+	int TriangleCount;
+	bool UseTransform;
+}
+
 // Converts a world position into a grid space (0,0,0) - (Size, Size, Size)
 float3 FromPositionToCell(float3 P, float4x3 world) {
 	return (mul(float4(P, 1), world) - Min) * Size / (Max - Min);
@@ -37,14 +43,16 @@ void main(uint3 DTid : SV_DispatchThreadID)
 	uint NumberOfVertices, stride;
 	vertices.GetDimensions(NumberOfVertices, stride);
 
-	if (DTid.x >= NumberOfVertices / 3)
+	if (DTid.x >= TriangleCount)
 		return;
 
-	float4x3 world = Transforms[OB[DTid.x * 3]];
+	int triangleIndex = TriangleStart + DTid.x;
 
-	float3 c1 = FromPositionToCell(vertices[DTid.x * 3 + 0].P, world);
-	float3 c2 = FromPositionToCell(vertices[DTid.x * 3 + 1].P, world);
-	float3 c3 = FromPositionToCell(vertices[DTid.x * 3 + 2].P, world);
+	float4x3 world = UseTransform ? Transforms[OB[triangleIndex * 3]] : float4x3(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0);
+
+	float3 c1 = FromPositionToCell(vertices[triangleIndex * 3 + 0].P, world);
+	float3 c2 = FromPositionToCell(vertices[triangleIndex * 3 + 1].P, world);
+	float3 c3 = FromPositionToCell(vertices[triangleIndex * 3 + 2].P, world);
 
 	float3 P = c1;
 	float3 N = cross(c3 - c1, c2 - c1);
@@ -70,7 +78,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
 				{
 					int currentReference;
 					InterlockedAdd(Malloc[0], 1, currentReference);
-					TriangleIndices[currentReference] = DTid.x;
+					TriangleIndices[currentReference] = triangleIndex;
 					InterlockedExchange(Head[currentCell], currentReference, Next[currentReference]);
 				}
 			}

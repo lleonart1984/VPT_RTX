@@ -308,31 +308,31 @@ int main(int, char**)
 		
 		char* filePath = desktop_directory();
 		strcat(filePath, "\\Models\\newLucy.obj");
-		scene->loadModelsFrom(filePath, true, Translate(0.0,0.44,0));
+		scene->loadModelsFrom(filePath, true, Translate(0.4,0.44,0));
 
-		/*filePath = desktop_directory();
+		filePath = desktop_directory();
 		strcat(filePath, "\\Models\\newDragon.obj");
 		scene->loadModelsFrom(filePath, true, Translate(-0.25, 0.14, 0));
 
 		filePath = desktop_directory();
 		strcat(filePath, "\\Models\\plate.obj");
-		scene->loadModelsFrom(filePath, true, mul(Scale(1, 1, 1), Translate(0, 0, 0)));*/
+		scene->loadModelsFrom(filePath, true, mul(Scale(25, 1, 25), Translate(0, 0, 0)));
 
 		MixGlassMaterial(&scene->getMaterialBuffer()[0], 1, 1.5);
 		scene->getVolumeMaterialBuffer()[0] = SCENE_VOLMATERIAL{
 				float3(500, 500, 500), // sigma
 				float3(0.999, 0.99995, 0.999),
+				float3(0.1, 0.1, 0.1)
+		};
+
+		MixGlassMaterial(&scene->getMaterialBuffer()[1], 1, 1.5);
+		scene->getVolumeMaterialBuffer()[1] = SCENE_VOLMATERIAL{
+				float3(500, 500, 500), // sigma
+				float3(0.999, 0.99995, 0.999),
 				float3(0.9, 0.9, 0.9)
 		};
 
-		//MixGlassMaterial(&scene->getMaterialBuffer()[1], 1, 1.5);
-		//scene->getVolumeMaterialBuffer()[1] = SCENE_VOLMATERIAL{
-		//		float3(500, 500, 500), // sigma
-		//		float3(0.999, 0.99995, 0.999),
-		//		float3(0.9, 0.9, 0.9)
-		//};
-
-		//MixMirrorMaterial(&scene->getMaterialBuffer()[2], 0.3);
+		MixMirrorMaterial(&scene->getMaterialBuffer()[2], 0.3);
 
 		camera->Position = float3(0, 0.5, 1.7);
 		camera->Target = float3(0,0.4,0);

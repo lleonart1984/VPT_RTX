@@ -8,6 +8,7 @@
     <FxCompile Include="Techniques\VPT\GridInitialDistances_CS.hlsl" />
     <FxCompile Include="Techniques\VPT\GridSpreadDistances_CS.hlsl" />
     <FxCompile Include="Techniques\VPT\GridVoxelization_CS.hlsl" />
+    <FxCompile Include="Techniques\VPT\VST_GPO_RT.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Imgui\imgui.cpp" />
@@ -60,6 +61,7 @@
     <ClInclude Include="Techniques\Common\Environment.h" />
     <ClInclude Include="Techniques\VPT\CVAEScattering.h" />
     <ClInclude Include="Techniques\VPT\VST_Technique.h" />
+    <ClInclude Include="Techniques\VPT\VST_GPO_Technique.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

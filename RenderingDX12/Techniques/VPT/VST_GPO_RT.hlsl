@@ -15,24 +15,16 @@
 // Top level structure with the scene
 RaytracingAccelerationStructure Scene	: register(t0, space0);
 
-Texture3D<float> Grid				: register(t1);
+struct GridInfo {
+	// Used to scale a distance from grid to world.
+	float Grid2WorldScalling; 
+	// Transform from world to grid space.
+	// Each cell in grid space has 1 unit size
+	float4x3 FromWorldToGrid; 
+};
 
-cbuffer GridInfo : register(b2) {
-	int Size;
-	float3 MinimumGrid;
-	float3 MaximumGrid;
-}
-
-//struct GridInfo {
-//	float cellSize; // Gets the grid cell size
-//	int Size; // Gets the grid number of cell per dimension
-//	float3 MinimumGrid; // Gets the minimum coordinate of the grid
-//
-//	float4x3 FromWorldToGrid; // Transformation from world to the grid coordinates (0,0,0) - (Size, Size, Size)
-//};
-//
-//StructuredBuffer<GridInfo> GridInfos	: register(t1);
-//Texture3D<float> Grids [100]			: register(t2);
+StructuredBuffer<GridInfo> GridInfos	: register(t1);
+Texture3D<float> Grids[100]				: register(t2);
 
 cbuffer Lighting : register(b0) {
 	float3 LightPosition;
@@ -52,7 +44,7 @@ struct ObjInfo {
 	int MaterialIndex;
 };
 // Locals for hit groups (fresnel and lambert)
-ConstantBuffer<ObjInfo> objectInfo		: register(b3);
+ConstantBuffer<ObjInfo> objectInfo		: register(b2);
 
 struct RayPayload // Only used for raycasting
 {
@@ -63,21 +55,20 @@ struct RayPayload // Only used for raycasting
 };
 
 /// Query the distance field grid.
-float MaximalRadius(float3 P) {
-	float3 cellSize = (MaximumGrid - MinimumGrid) / Size;
-	int3 cell = (P - MinimumGrid) / cellSize;
-	float radius = Grid[cell];
+float MaximalRadius(float3 P, int object) {
 
+	GridInfo info = GridInfos[object];
+	float3 positionInGrid = mul(float4(P, 1), info.FromWorldToGrid);
+	float radius = Grids[object][positionInGrid];
+	
 	if (radius < 0) // no empty cell
 		return 0;
-
-	float3 minBox = (cell - radius) * cellSize + MinimumGrid;
-	float3 maxBox = (cell + 1 + radius) * cellSize + MinimumGrid;
-
-	float3 toMin = (P - minBox);
-	float3 toMax = (maxBox - P);
-	float3 m = min(toMin, toMax);
-	return min(m.x, min(m.y, m.z));
+	
+	float3 distToMinCorner = positionInGrid % 1;
+	float3 m = min(distToMinCorner, 1 - distToMinCorner);
+	float minDistanceToCellBorder = min(m.x, min(m.y, m.z));
+	float safeDistanceInGridSpace = minDistanceToCellBorder + radius;
+	return safeDistanceInGridSpace * info.Grid2WorldScalling;
 }
 
 float sampleNormal(float mu, float logVar) {
@@ -112,7 +103,7 @@ bool GenerateVariablesWithModel(float G, float Phi, float3 win, float density, o
 	lenModel(lenInput, lenOutput);
 
 	float logN = max(0, sampleNormal(lenOutput[0], lenOutput[1]));
-	float n = round(exp(logN));
+	float n = (exp(logN));
 	//logN = log(n);
 
 	if (random() >= pow(Phi, n))
@@ -148,37 +139,6 @@ bool GenerateVariablesWithModel(float G, float Phi, float3 win, float density, o
 	w = mul(w, (R)); // move to radial space
 
 	return true;// random() >= 1 - pow(Phi, n);
-}
-
-// Represents a single bounce of path tracing
-// Will accumulate emissive and direct lighting modulated by the carrying importance
-// Will update importance with scattered ratio divided by pdf
-// Will output scattered ray to continue with
-void VolumeScattering(inout float3 x, inout float3 w, inout float3 importance, float Extinction, float G, float Phi)
-{
-	bool pathTrace = DispatchRaysIndex().x / (float)DispatchRaysDimensions().x < 1;
-
-	[branch]
-	if (pathTrace)
-	{
-		if (random() < 1 - Phi)
-			importance = 0; // absorption
-
-		// Update scattered ray
-		w = ImportanceSamplePhase(G, w);
-	}
-	else {
-
-		float r = MaximalRadius(x);
-
-		float3 _x, _w, _X, _W;
-
-		if (!GenerateVariablesWithModel(G, Phi, w, Extinction * r, _x, _w))
-			importance = 0;
-
-		w = _w;
-		x += _x * r;
-	}
 }
 
 /// Use RTX TraceRay to detect a single intersection. No recursion is necessary
@@ -240,8 +200,6 @@ float3 ComputePath(float3 O, float3 D, inout int complexity)
 
 	int bounces = 0;
 
-	float3 result = 0;
-
 	[loop]
 	while (true)
 	{
@@ -253,7 +211,13 @@ float3 ComputePath(float3 O, float3 D, inout int complexity)
 		float3 coords;
 
 		if (!Intersect(x, w, tIndex, transformIndex, mIndex, coords)) // 
+		{
+			// Uncomment this to check for geometry leaking.
+			/*if (inMedium)
+				return float3(1, 0, 1) * 100000; */
+			
 			return importance * (SampleSkybox(w) + SampleLight(w) * (bounces > 0));
+		}
 
 		Vertex surfel;
 		Material material;
@@ -264,10 +228,11 @@ float3 ComputePath(float3 O, float3 D, inout int complexity)
 
 		float t = !inMedium || volMaterial.Extinction[cmp] == 0 ? 100000000 : -log(max(0.000000000001, 1 - random())) / volMaterial.Extinction[cmp];
 
-		if (t > d) // surface scattering
+		[branch]
+		if (t >= d) // surface scattering
 		{
 			bounces += (!inMedium);
-
+			
 			if (bounces > 5)
 				return 0;
 
@@ -279,10 +244,8 @@ float3 ComputePath(float3 O, float3 D, inout int complexity)
 		else // volume scattering will occur
 		{
 			x += t * w; // free traverse in a medium
-
-			float r = MaximalRadius(x);
-
-			//if (r * volMaterial.Extinction[cmp] < 0.125)
+			//bool pathTrace = DispatchRaysIndex().x / (float)DispatchRaysDimensions().x < 0.5;
+			//if (pathTrace)
 			//{
 			//	if (random() < 1 - volMaterial.ScatteringAlbedo[cmp]) // absorption instead
 			//		return 0;
@@ -291,8 +254,10 @@ float3 ComputePath(float3 O, float3 D, inout int complexity)
 			//}
 			//else
 			{
+				float r = MaximalRadius(x, transformIndex);
+
 				float3 _x, _w, _X, _W;
-			
+
 				if (!GenerateVariablesWithModel(volMaterial.G[cmp], volMaterial.ScatteringAlbedo[cmp], w, volMaterial.Extinction[cmp] * r, _x, _w))
 					return 0;
 

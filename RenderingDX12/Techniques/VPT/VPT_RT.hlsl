@@ -100,7 +100,7 @@ float3 ComputePath(float3 O, float3 D, inout int complexity)
 
 	int bounces = 0;
 
-	while (importance[cmp] > 0)
+	while (true)
 	{
 		complexity++;
 
@@ -120,13 +120,13 @@ float3 ComputePath(float3 O, float3 D, inout int complexity)
 
 		float t = !inMedium || volMaterial.Extinction[cmp] == 0 ? 100000000 : -log(max(0.000000000001, 1 - random())) / volMaterial.Extinction[cmp];
 
-		if (t > d) // surface scattering
+		if (t >= d) // surface scattering
 		{
 			if (!inMedium)
 				bounces++;
 
 			if (bounces > 5)
-				importance = 0;
+				return 0;
 
 			SurfelScattering(x, w, importance, surfel, material);
 
@@ -138,13 +138,11 @@ float3 ComputePath(float3 O, float3 D, inout int complexity)
 			x += t * w; // free traverse in a medium
 
 			if (random() < 1 - volMaterial.ScatteringAlbedo[cmp]) // absorption instead
-				importance = 0;
+				return 0;
 
 			w = ImportanceSamplePhase(volMaterial.G[cmp], w); // scattering event...
 		}
 	}
-
-	return 0;
 }
 
 [shader("closesthit")]

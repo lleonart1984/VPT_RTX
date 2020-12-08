@@ -30,7 +30,8 @@
 
 //gObj<RetainedBasicRenderer> technique;
 //gObj<VPT_Technique> technique;
-gObj<VST_Technique> technique;
+//gObj<VST_Technique> technique;
+gObj<VST_GPO_Technique> technique;
 
 //#define TEST_WSAPIT
 //#define TEST_WSMRAPIT
